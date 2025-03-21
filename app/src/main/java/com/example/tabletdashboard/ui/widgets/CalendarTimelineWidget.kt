@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,7 +72,7 @@ private const val TAG = "CalendarTimelineWidget"
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
-    var selectedDays by remember { mutableIntStateOf(3) } // Default to 3 days
+    var selectedDays by remember { mutableIntStateOf(1) } // Default to 3 days
     var startDate by remember { mutableStateOf(Calendar.getInstance().startOfDay()) }
 
     val calendarRepository = koinInject<CalendarRepository>()
@@ -104,6 +105,7 @@ fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
                     text = "$selectedDays Days ▼",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
                     modifier = Modifier
                         .clickable { expanded = true }
                         .padding(16.dp, 0.dp)
@@ -230,6 +232,8 @@ fun TimelineView(events: Map<Calendar, List<CalendarEvent>>, daysToShow: Int, st
             Text(
                 text = SimpleDateFormat("EEE, MMM d", Locale.getDefault()).format(date.time),
                 fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -278,8 +282,9 @@ fun TimelineView(events: Map<Calendar, List<CalendarEvent>>, daysToShow: Int, st
                             (0..<23).forEach { hour ->
                                 HorizontalDivider(thickness = 1.dp, color = Color.LightGray, modifier = Modifier.offset { IntOffset(0, ((hour+1)  * itemHeight.intValue + 1).dp.roundToPx()) })
                             }
-                            events[date]?.forEach { event ->
-                                EventBox(event)
+                            events[date]?.sortedByDescending { it.end.timeInMillis - it.start.timeInMillis }?.forEach { event ->
+                                val overlapStatus = checkOverlap(event, events[date] ?: emptyList())
+                                EventBox(event, overlapStatus)
                             }
                         }
                     }
@@ -296,8 +301,34 @@ fun TimelineView(events: Map<Calendar, List<CalendarEvent>>, daysToShow: Int, st
     }
 }
 
+fun checkOverlap(event: CalendarEvent, events: List<CalendarEvent>): Int {
+    val eventStart = event.start.timeInMillis
+    val eventEnd = event.end.timeInMillis
+    val eventDuration = eventEnd - eventStart
+    var hasShorterOverlap = false
+
+    for (other in events) {
+        if (other != event) { // Avoid self-comparison
+            val otherStart = other.start.timeInMillis
+            val otherEnd = other.end.timeInMillis
+            val otherDuration = otherEnd - otherStart
+
+            // Check for overlap
+            if (eventStart < otherEnd && eventEnd > otherStart) {
+                if (otherDuration > eventDuration) {
+                    return 2 // Found an overlapping event that is longer
+                }
+                hasShorterOverlap = true // Found an overlapping event that is shorter
+            }
+        }
+    }
+
+    return if (hasShorterOverlap) 1 else 0
+}
+
+
 @Composable
-fun EventBox(event: CalendarEvent) {
+fun EventBox(event: CalendarEvent, overlapStatus: Int = 0) {
     val eventStartHour = event.start.get(Calendar.HOUR_OF_DAY)
     val eventStartMinute = event.start.get(Calendar.MINUTE)
     val eventEndMinute = event.end.get(Calendar.MINUTE)
@@ -313,18 +344,23 @@ fun EventBox(event: CalendarEvent) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(1.dp * durationMinutes)
             .padding(4.dp)
-            .offset(y = (verticalOffset * 60).dp)
-            .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.8f), shape = RoundedCornerShape(4.dp))
-            .background(event.color, shape = RoundedCornerShape(4.dp))
+            .offset(y = (verticalOffset * 60).dp),
+        contentAlignment = if(overlapStatus == 2) Alignment.CenterEnd else Alignment.CenterStart
     ) {
-        Text(
-            text = event.title,
-            fontSize = 12.sp,
-            color = Color.White,
-            modifier = Modifier.padding(4.dp, 0.dp)
-        )
+        Box(modifier = Modifier
+            .fillMaxWidth((1f - 0.2f * overlapStatus))
+            .height(1.dp * durationMinutes)
+            .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.8f), shape = RoundedCornerShape(4.dp))
+            .background(event.color, shape = RoundedCornerShape(4.dp)),
+            ) {
+            Text(
+                text = event.title,
+                fontSize = 12.sp,
+                color = Color.White,
+                modifier = Modifier.padding(4.dp, 0.dp)
+            )
+        }
     }
 }
 

@@ -3,47 +3,112 @@ package com.example.tabletdashboard.ui.widgets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.tabletdashboard.api.Departure
-import com.example.tabletdashboard.api.Station
-import com.example.tabletdashboard.viewmodels.MVGDeparturesViewModel
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tabletdashboard.api.Departure
+import com.example.tabletdashboard.api.Station
+import com.example.tabletdashboard.tools.AsyncState
+import com.example.tabletdashboard.viewmodels.MVGDeparturesViewModel
 
 @Composable
 fun MVGDeparturesWidget() {
     val mvgDeparturesViewModel = viewModel<MVGDeparturesViewModel>()
     var mvgResponse = mvgDeparturesViewModel.mvgResponse.collectAsState()
     var selectedStation = mvgDeparturesViewModel.selectedStation.collectAsState()
-    var departures = mvgResponse.value?.departureList ?: emptyList()
 
-    Column(modifier = Modifier.border(width = 1.dp, color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp))) {
-        // Dropdown to select a station
-        StationDropdown(
-            selectedStation = selectedStation.value,
-            onStationSelected = { station ->
-                mvgDeparturesViewModel.loadStation(station)
-            }
+    val mvgDataState = mvgResponse.value
+    Column(
+        modifier = Modifier.border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary,
+            shape = RoundedCornerShape(8.dp)
         )
-        // Show departures once the station is selected
-        MVGDeparturesList(departures = departures)
+    ) {
+        when (mvgDataState) {
+            is AsyncState.Success -> {
+                var departures = mvgDataState.data.departureList
+
+
+                // Dropdown to select a station
+                StationDropdown(
+                    selectedStation = selectedStation.value,
+                    onStationSelected = { station ->
+                        mvgDeparturesViewModel.loadStation(station)
+                    }
+                )
+                // Show departures once the station is selected
+                MVGDeparturesList(departures = departures)
+            }
+
+            is AsyncState.Error -> {
+                // Show an error message if the data could not be loaded
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Error loading MVG Departures",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = { mvgDeparturesViewModel.fetchManually() },
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            }
+
+            else -> {
+                Box(Modifier.fillMaxSize()){
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
+        }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,17 +119,20 @@ fun StationDropdown(
 ) {
     // Dropdown to allow the user to select a station
     var expanded by remember { mutableStateOf(false) }
-    Box(Modifier
-        .fillMaxWidth()
-        .background(
-            color = MaterialTheme.colorScheme.primary,
-            shape = RoundedCornerShape(8.dp, 8.dp, 0.dp, 0.dp)
-        )
-        .padding(16.dp, 8.dp)) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(8.dp, 8.dp, 0.dp, 0.dp)
+            )
+            .padding(16.dp, 8.dp)
+    ) {
         Text(
             text = "${selectedStation.stationName} ▼",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
                 .clickable { expanded = true }
                 .padding(16.dp, 8.dp)
@@ -96,7 +164,7 @@ fun MVGDeparturesList(departures: List<Departure>) {
 @Composable
 fun DepartureItem(departure: Departure) {
     // A card for each departure item
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
@@ -145,9 +213,9 @@ fun getColorFor(lineName: String, lineNumber: String): Color {
         "U8" -> Color(0xFF8ECAE6)
         else -> Color.Gray
     }
-    if(lineName.contains("Bus")){
+    if (lineName.contains("Bus")) {
         color = Color(0xFF005E89)
-    } else if (lineName.contains("Tram")){
+    } else if (lineName.contains("Tram")) {
         color = Color(0xFFE30614)
     }
     return color

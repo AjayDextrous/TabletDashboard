@@ -5,6 +5,7 @@ import com.example.tabletdashboard.api.Station.entries
 import kotlinx.serialization.Serializable
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
@@ -18,7 +19,8 @@ enum class Station(val stationName: String, val apiName: String) {
     KLINIKUM_RECHTS("Max-Weber-Platz", "91000580"),
     GROSSHADERN("Klinikum Großhadern", "91001540"),
     GARCHING("Forschungszentrum", "1000460"),
-    FREISING("Freising, Weihenstephan", "1002911");
+    FREISING("Freising, Weihenstephan", "1002911"),
+    IMPLERSTRASSE("Implerstraße", "91001140");
 
     companion object {
         fun fromApiName(apiName: String): Station? {
@@ -27,7 +29,7 @@ enum class Station(val stationName: String, val apiName: String) {
     }
 }
 
-data class MVGResponse(
+data class MVGDepartureData(
     val departureList: List<Departure>
 )
 
@@ -66,7 +68,7 @@ interface MVGApi {
         @Query("mergeDep") mergeDep: String = "1",
         @Query("useAllStops") useAllStops: String = "1",
         @Query("mode") mode: String = "direct"
-    ): MVGResponse
+    ): Response<MVGDepartureData>
 
 }
 

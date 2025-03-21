@@ -3,6 +3,7 @@ package com.example.tabletdashboard.ui.widgets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,16 +14,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tabletdashboard.api.Dish
 import com.example.tabletdashboard.api.DishType
 import com.example.tabletdashboard.api.Label
-import com.example.tabletdashboard.api.MensaMenuResponse
+import com.example.tabletdashboard.api.MensaMenu
 import com.example.tabletdashboard.api.MenuDay
 import com.example.tabletdashboard.api.PriceDetail
 import com.example.tabletdashboard.api.Prices
+import com.example.tabletdashboard.tools.AsyncState
+import com.example.tabletdashboard.viewmodels.MensaViewModel
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun MensaMenuWidget(mensaMenuResponse: MensaMenuResponse, modifier: Modifier = Modifier) {
+fun MensaMenuWidget(modifier: Modifier = Modifier) {
+
+    val mensaViewModel = viewModel<MensaViewModel>()
+    val mensaMenuResponseState = mensaViewModel.menuState.collectAsState()
+    val mensaMenuResponse = mensaMenuResponseState.value
+    val today = LocalDateTime.now().toLocalDate()
+
     Column(modifier = modifier
         .fillMaxSize()
         .border(
@@ -31,20 +44,56 @@ fun MensaMenuWidget(mensaMenuResponse: MensaMenuResponse, modifier: Modifier = M
             shape = RoundedCornerShape(8.dp)
         )
         .padding(16.dp, 0.dp)) {
+        when (mensaMenuResponse) {
+            AsyncState.Loading -> {
+                Box(Modifier.fillMaxSize()){
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
+            AsyncState.Init -> {
+                Box(Modifier.fillMaxSize()) {
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = "Mensa Menu",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.Black
-                )
+                }
             }
-            items(mensaMenuResponse.days) { menuDay ->
-                MenuDayItem(menuDay)
+            is AsyncState.Error -> {
+                Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = "Error loading Mensa Menu",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = { mensaViewModel.fetchMensaMenu() },
+                    ) {
+                        Text("Retry")
+                    }
+                }
             }
-            item { Spacer(Modifier.height(16.dp)) }
+            is AsyncState.Success -> {
+                val mensaMenu = mensaMenuResponse.data
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = "Mensa Menu",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = Color.Black
+                        )
+                    }
+                    items(mensaMenu.days) { menuDay ->
+                        val day = LocalDate.parse(menuDay.date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        if(!day.isBefore(today)){
+                            MenuDayItem(menuDay)
+                        }
+                    }
+                    item { Spacer(Modifier.height(16.dp)) }
+                }
+            }
         }
     }
 }
@@ -152,7 +201,7 @@ fun mapLabelToEmoji(label: Label): String {
 @Preview(showBackground = true)
 @Composable
 fun MensaMenuWidgetPreview() {
-    val sampleMenu = MensaMenuResponse(
+    val sampleMenu = MensaMenu(
         number = 1,
         year = 2024,
         version = "1.0",
@@ -185,5 +234,5 @@ fun MensaMenuWidgetPreview() {
         )
     )
 
-    MensaMenuWidget(mensaMenuResponse = sampleMenu)
+    MensaMenuWidget()
 }

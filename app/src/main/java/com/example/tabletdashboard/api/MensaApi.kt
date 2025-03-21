@@ -12,16 +12,15 @@ import com.google.gson.JsonSerializer
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
-import retrofit2.http.Query
-
 
 import com.google.gson.annotations.SerializedName
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
-data class MensaMenuResponse(
+data class MensaMenu(
     @SerializedName("number") val number: Int,
     @SerializedName("year") val year: Int,
     @SerializedName("days") val days: List<MenuDay>,
@@ -126,7 +125,7 @@ interface MensaApi {
         @Path("canteen") canteen: String,
         @Path("year") year: Int,
         @Path("week-number") weekNumber: Int
-    ): MensaMenuResponse
+    ): Response<MensaMenu>
 }
 
 object MensaRetrofitInstance {

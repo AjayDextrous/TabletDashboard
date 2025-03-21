@@ -1,7 +1,9 @@
 package com.example.tabletdashboard.ui.widgets
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import com.example.tabletdashboard.tools.AsyncState
 import com.example.tabletdashboard.viewmodels.WeatherViewModel
 
 @Composable
@@ -20,17 +23,21 @@ fun WeatherWidget(viewModel: WeatherViewModel) {
     val weather = viewModel.weatherState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.startWeatherUpdates(lat = 37.7749, lon = -122.4194) // Example: San Francisco
+        viewModel.startWeatherUpdates(lat = currentLocation.first, lon = currentLocation.second)
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(8.dp)),
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(8.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
-        val weatherValue = weather.value
-        if (weatherValue != null) {
+        val weatherStateValue = weather.value
+        if (weatherStateValue is AsyncState.Success) {
+            val weatherValue = weatherStateValue.data
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = getWeatherIcon(weatherValue.currentWeather.weatherCode),
@@ -47,27 +54,34 @@ fun WeatherWidget(viewModel: WeatherViewModel) {
                 )
             }
         } else {
-            Text("Loading...")
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        enabled = true,
+                        onClickLabel = "Update weather manually",
+                        onClick = {
+                            viewModel.fetchWeatherManually(
+                                currentLocation.first,
+                                currentLocation.second
+                            )
+                        }),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(48.dp)
+                )
+                Spacer(Modifier.height(16.dp))
+                Text("Loading weather...", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
         }
     }
 }
 
-/**
- * Code	Description
- * 0	Clear sky
- * 1, 2, 3	Mainly clear, partly cloudy, and overcast
- * 45, 48	Fog and depositing rime fog
- * 51, 53, 55	Drizzle: Light, moderate, and dense intensity
- * 56, 57	Freezing Drizzle: Light and dense intensity
- * 61, 63, 65	Rain: Slight, moderate and heavy intensity
- * 66, 67	Freezing Rain: Light and heavy intensity
- * 71, 73, 75	Snow fall: Slight, moderate, and heavy intensity
- * 77	Snow grains
- * 80, 81, 82	Rain showers: Slight, moderate, and violent
- * 85, 86	Snow showers slight and heavy
- * 95 *	Thunderstorm: Slight or moderate
- * 96, 99 *	Thunderstorm with slight and heavy hail
- */
+val Munich = Pair(48.1351, 11.5820)
+var currentLocation = Munich
 
 fun getWeatherIcon(weatherCode: Int): ImageVector {
     return when (weatherCode) {

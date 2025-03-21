@@ -19,8 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +38,6 @@ import com.example.tabletdashboard.ui.widgets.RequestCalendarPermission
 import com.example.tabletdashboard.ui.widgets.WeatherWidget
 import com.example.tabletdashboard.ui.widgets.Widget
 import com.example.tabletdashboard.viewmodels.AppViewModel
-import com.example.tabletdashboard.viewmodels.MensaViewModel
 import com.example.tabletdashboard.viewmodels.WeatherViewModel
 
 @Composable
@@ -51,8 +48,8 @@ fun App(isDarkTheme: Boolean) {
     val items = listOf(
         GridPosition(row = 0, column = 0, rowSpan = 1, colSpan = 2, widget = Widget.CLOCK),
         GridPosition(row = 0, column = 2, rowSpan = 3, colSpan = 3, widget = Widget.CALENDAR_TIMELINE),
-        GridPosition(row = 0, column = 5, rowSpan = 2, colSpan = 2, widget = Widget.MVG_DEPARTURES),
-        GridPosition(row = 2, column = 5, rowSpan = 2, colSpan = 2, widget = Widget.MENSA_ARCISSTRASSE),
+        GridPosition(row = 0, column = 5, rowSpan = 1, colSpan = 2, widget = Widget.MVG_DEPARTURES),
+        GridPosition(row = 1, column = 5, rowSpan = 3, colSpan = 2, widget = Widget.MENSA_ARCISSTRASSE),
         GridPosition(row = 1, column = 0, rowSpan = 2, colSpan = 2, widget = Widget.CALENDAR_MONTH),
         GridPosition(row = 3, column = 0, rowSpan = 1, colSpan = 1, widget = Widget.POMODORO_TIMER),
         GridPosition(row = 3, column = 1, rowSpan = 1, colSpan = 2, widget = Widget.WEATHER),
@@ -110,46 +107,21 @@ fun HomeGridLayout(
                         .padding(8.dp)
                 ) {
                     when (position.widget) {
-                        Widget.CLOCK -> {
-                            ClockWidget(
-                                modifier = Modifier.fillMaxSize()
-                            )
+                        Widget.CLOCK -> ClockWidget(
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Widget.CALENDAR_MONTH -> CalendarMonthWidget(
+                            modifier = Modifier.fillMaxSize(),
+                            rowSpan = position.rowSpan,
+                            colSpan = position.colSpan
+                        )
+                        Widget.CALENDAR_TIMELINE -> RequestCalendarPermission {
+                            CalendarTimelineWidget(Modifier.fillMaxSize(), LocalContext.current)
                         }
-                        Widget.CALENDAR_MONTH -> {
-                            CalendarMonthWidget(
-                                modifier = Modifier.fillMaxSize(),
-                                rowSpan = position.rowSpan,
-                                colSpan = position.colSpan
-                            )
-                        }
-                        Widget.CALENDAR_TIMELINE -> {
-                            RequestCalendarPermission {
-                                CalendarTimelineWidget(Modifier.fillMaxSize(), LocalContext.current)
-                            }
-                        }
-                        Widget.WEATHER -> {
-                            WeatherWidget(viewModel<WeatherViewModel>())
-                        }
-                        Widget.MVG_DEPARTURES -> {
-                            MVGDeparturesWidget()
-                        }
-                        Widget.MENSA_ARCISSTRASSE -> {
-                            val mensaViewModel: MensaViewModel = viewModel()
-                            val menuState = mensaViewModel.menuState.collectAsState()
-                            LaunchedEffect(Unit) {
-                                mensaViewModel.fetchMensaMenu()
-                            }
-                            val menuStateValue = menuState.value
-                            if (menuStateValue != null){
-                                MensaMenuWidget(menuStateValue)
-                            } else {
-                                WidgetPlaceholder("Loading...")
-                            }
-
-                        }
-                        Widget.POMODORO_TIMER -> {
-                            PomodoroTimerWidget()
-                        }
+                        Widget.WEATHER -> WeatherWidget(viewModel<WeatherViewModel>())
+                        Widget.MVG_DEPARTURES -> MVGDeparturesWidget()
+                        Widget.MENSA_ARCISSTRASSE -> MensaMenuWidget()
+                        Widget.POMODORO_TIMER -> PomodoroTimerWidget()
                         Widget.BUTTON_ARRAY -> {
                             val appViewModel = viewModel<AppViewModel>()
                             ButtonArrayWidget(
@@ -163,12 +135,8 @@ fun HomeGridLayout(
                                 bottomRight =  { modifier -> Box(modifier = modifier.background(color = MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(8.dp))) }
                             )
                         }
-                        Widget.PICTURE_WIDGET -> {
-                            PictureWidget()
-                        }
-                        else -> {
-                            WidgetPlaceholder("${position.rowSpan} * ${position.colSpan}")
-                        }
+                        Widget.PICTURE_WIDGET -> PictureWidget()
+                        else -> WidgetPlaceholder("${position.rowSpan} * ${position.colSpan}")
                     }
                 }
             }

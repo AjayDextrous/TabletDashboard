@@ -8,9 +8,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import java.util.concurrent.TimeUnit
 
-data class WeatherResponse(
+data class Weather(
     @SerializedName("latitude") val latitude: Double,
     @SerializedName("longitude") val longitude: Double,
     @SerializedName("generationtime_ms") val generationTimeMs: Double,
@@ -48,7 +49,7 @@ interface WeatherApi {
         @Query("latitude") lat: Double,
         @Query("longitude") lon: Double,
         @Query("current_weather") currentWeather: Boolean = true
-    ): WeatherResponse
+    ): Response<Weather>
 }
 
 object WeatherRetrofitInstance {
