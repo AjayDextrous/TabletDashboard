@@ -10,9 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MensaViewModel : ViewModel() {
+class MensaViewModel(private val mensaRepository: MensaRepository) : ViewModel() {
 
-    private val mensaRepository = MensaRepository()
     private val _menuState = MutableStateFlow<AsyncState<MensaMenu>>(AsyncState.Init)
     val menuState = _menuState.asStateFlow()
 

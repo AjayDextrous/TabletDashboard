@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class WeatherViewModel : ViewModel() {
-    private val repository = WeatherRepository()
+class WeatherViewModel(private val repository: WeatherRepository) : ViewModel() {
 
     private val _weatherState = MutableStateFlow<AsyncState<Weather>>(AsyncState.Loading)
     val weatherState = _weatherState.asStateFlow()

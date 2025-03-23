@@ -24,6 +24,7 @@ import com.example.tabletdashboard.api.PriceDetail
 import com.example.tabletdashboard.api.Prices
 import com.example.tabletdashboard.tools.AsyncState
 import com.example.tabletdashboard.viewmodels.MensaViewModel
+import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -31,7 +32,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun MensaMenuWidget(modifier: Modifier = Modifier) {
 
-    val mensaViewModel = viewModel<MensaViewModel>()
+    val mensaViewModel = koinViewModel<MensaViewModel>()
     val mensaMenuResponseState = mensaViewModel.menuState.collectAsState()
     val mensaMenuResponse = mensaMenuResponseState.value
     val today = LocalDateTime.now().toLocalDate()

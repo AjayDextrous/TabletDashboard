@@ -11,9 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MVGDeparturesViewModel: ViewModel() {
-
-    private val mvgRepository = MVGRepository()
+class MVGDeparturesViewModel(private val mvgRepository: MVGRepository): ViewModel() {
 
     val selectedStation: MutableStateFlow<Station> = MutableStateFlow<Station>(Station.STAMMGELAENDE)
     private val _mvgResponse = MutableStateFlow<AsyncState<MVGDepartureData>>(AsyncState.Loading)

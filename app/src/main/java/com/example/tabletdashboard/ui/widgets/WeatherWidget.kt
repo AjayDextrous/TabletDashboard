@@ -17,9 +17,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import com.example.tabletdashboard.tools.AsyncState
 import com.example.tabletdashboard.viewmodels.WeatherViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun WeatherWidget(viewModel: WeatherViewModel) {
+fun WeatherWidget() {
+    val viewModel: WeatherViewModel = koinViewModel()
     val weather = viewModel.weatherState.collectAsState()
 
     LaunchedEffect(Unit) {

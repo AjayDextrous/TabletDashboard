@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,15 +56,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tabletdashboard.repositories.CalendarEvent
-import com.example.tabletdashboard.repositories.CalendarRepository
-import com.example.tabletdashboard.repositories.startOfDay
+import com.example.tabletdashboard.viewmodels.CalendarTimelineViewModel
 import kotlinx.coroutines.delay
-import org.koin.compose.koinInject
+import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalTime
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import kotlin.math.max
 
@@ -72,14 +72,11 @@ private const val TAG = "CalendarTimelineWidget"
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
-    var selectedDays by remember { mutableIntStateOf(1) } // Default to 3 days
-    var startDate by remember { mutableStateOf(Calendar.getInstance().startOfDay()) }
+    val viewModel = koinViewModel<CalendarTimelineViewModel>()
 
-    val calendarRepository = koinInject<CalendarRepository>()
-    // TODO: replace with flows and viewmodel
-    val events = remember(selectedDays, startDate) {
-        calendarRepository.fetchCalendarEvents(context, startDate, selectedDays)
-    }
+    var selectedDays = viewModel.selectedDays.collectAsState()
+    var startDate = viewModel.startDate.collectAsState()
+    val events = viewModel.events.collectAsState()
 
     Column(modifier
         .border(1.dp, MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(8.dp))
@@ -102,7 +99,7 @@ fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
             var expanded by remember { mutableStateOf(false) }
             Box {
                 Text(
-                    text = "$selectedDays Days ▼",
+                    text = "${selectedDays.value} Days ▼",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.secondaryContainer,
@@ -111,11 +108,11 @@ fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
                         .padding(16.dp, 0.dp)
                 )
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    listOf(1, 3, 4, 5, 7).forEach { dayOption ->
+                    viewModel.selectableDays.forEach { dayOption ->
                         DropdownMenuItem(
                             text = { Text("$dayOption Days") },
                             onClick = {
-                                selectedDays = dayOption
+                                viewModel.selectedDays.value = dayOption
                                 expanded = false
                             }
                         )
@@ -126,28 +123,16 @@ fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
             // Navigation buttons
             Row {
                 IconButton(
-                    onClick = {
-                        startDate = (startDate.clone() as Calendar).also {
-                            it.add(
-                                Calendar.DAY_OF_YEAR,
-                                -selectedDays
-                            )
-                        }
-                    },
+                    onClick = viewModel::goToPrevious,
                     colors = IconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer, disabledContainerColor = Color.Unspecified, disabledContentColor = Color.Unspecified)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
                 }
-                Button(onClick = { startDate = Calendar.getInstance().startOfDay() }) {
+                Button(onClick = viewModel::goToToday) {
                     Text("Current")
                 }
                 IconButton(
-                    onClick = { startDate = (startDate.clone() as Calendar).also {
-                        it.add(
-                            Calendar.DAY_OF_YEAR,
-                            selectedDays
-                        )
-                    } },
+                    onClick = viewModel::goToNext,
                     colors = IconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer, disabledContainerColor = Color.Unspecified, disabledContentColor = Color.Unspecified)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
@@ -194,7 +179,7 @@ fun CalendarTimelineWidget(modifier: Modifier = Modifier, context: Context) {
 //                    TimelineView(events, targetSelectedDays, targetStartDate)
 //            }
 //        }
-        TimelineView(events, selectedDays, startDate)
+        TimelineView(events.value, selectedDays.value, startDate.value)
     }
 }
 

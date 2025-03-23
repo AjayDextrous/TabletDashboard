@@ -38,7 +38,6 @@ import com.example.tabletdashboard.ui.widgets.RequestCalendarPermission
 import com.example.tabletdashboard.ui.widgets.WeatherWidget
 import com.example.tabletdashboard.ui.widgets.Widget
 import com.example.tabletdashboard.viewmodels.AppViewModel
-import com.example.tabletdashboard.viewmodels.WeatherViewModel
 
 @Composable
 fun App(isDarkTheme: Boolean) {
@@ -118,7 +117,7 @@ fun HomeGridLayout(
                         Widget.CALENDAR_TIMELINE -> RequestCalendarPermission {
                             CalendarTimelineWidget(Modifier.fillMaxSize(), LocalContext.current)
                         }
-                        Widget.WEATHER -> WeatherWidget(viewModel<WeatherViewModel>())
+                        Widget.WEATHER -> WeatherWidget()
                         Widget.MVG_DEPARTURES -> MVGDeparturesWidget()
                         Widget.MENSA_ARCISSTRASSE -> MensaMenuWidget()
                         Widget.POMODORO_TIMER -> PomodoroTimerWidget()

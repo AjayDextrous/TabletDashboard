@@ -40,15 +40,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tabletdashboard.api.Departure
 import com.example.tabletdashboard.api.Station
 import com.example.tabletdashboard.tools.AsyncState
 import com.example.tabletdashboard.viewmodels.MVGDeparturesViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MVGDeparturesWidget() {
-    val mvgDeparturesViewModel = viewModel<MVGDeparturesViewModel>()
+    val mvgDeparturesViewModel = koinViewModel<MVGDeparturesViewModel>()
     var mvgResponse = mvgDeparturesViewModel.mvgResponse.collectAsState()
     var selectedStation = mvgDeparturesViewModel.selectedStation.collectAsState()
 
