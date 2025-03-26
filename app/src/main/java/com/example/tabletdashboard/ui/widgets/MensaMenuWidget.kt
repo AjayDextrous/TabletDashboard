@@ -83,7 +83,7 @@ fun MensaMenuWidget(modifier: Modifier = Modifier) {
                         Text(
                             text = "Mensa Menu",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     items(mensaMenu.days) { menuDay ->
@@ -105,7 +105,7 @@ fun MenuDayItem(menuDay: MenuDay) {
         Text(
             text = menuDay.date,
             style = MaterialTheme.typography.labelLarge,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onPrimary
         )
 
         menuDay.dishes.forEach { dish ->

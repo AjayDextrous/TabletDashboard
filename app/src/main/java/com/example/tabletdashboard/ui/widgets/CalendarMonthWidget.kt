@@ -1,7 +1,10 @@
 package com.example.tabletdashboard.ui.widgets
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,9 +62,20 @@ fun CalendarMonthWidget(
     val totalDays = daysInMonth + startOffset
     val weeks = (totalDays / 7) + if (totalDays % 7 > 0) 1 else 0
 
+    var showHeader by remember { mutableStateOf(false) }
+    LaunchedEffect(showHeader) {
+        if (showHeader) {
+            delay(3000)
+            showHeader = false
+        }
+    }
+    val interactionSource = remember { MutableInteractionSource() }
+
+
     Box(Modifier
         .fillMaxSize()
         .background(color = Color.White, shape = RoundedCornerShape(8.dp))
+        .clickable(enabled = true, onClick = { showHeader = !showHeader }, interactionSource = interactionSource, indication = null)
         .border(1.dp, MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center) {
         Column(
@@ -69,6 +83,16 @@ fun CalendarMonthWidget(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            AnimatedVisibility(showHeader) {
+                Text(
+                    text = yearMonth.month.getDisplayName(
+                        TextStyle.FULL,
+                        Locale.getDefault()
+                    ) + " " + yearMonth.year,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             // Weekday Header Row
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 val daysOfWeek = DayOfWeek.entries.toList().drop(weekStartDay.ordinal) +

@@ -65,7 +65,7 @@ fun PomodoroTimerWidget() {
 
     Box(
         modifier = Modifier
-            .size(200.dp)
+            .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.medium)
             .indication(interactionSource, LocalIndication.current)
             .combinedClickable(

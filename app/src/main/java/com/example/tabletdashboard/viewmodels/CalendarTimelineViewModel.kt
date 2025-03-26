@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.minutes
 class CalendarTimelineViewModel(val appContext: Context, val calendarRepository: CalendarRepository): ViewModel() {
 
     val selectableDays = listOf(1, 3, 4, 5, 7)
-    val selectedDays = MutableStateFlow(3)
+    val selectedDays = MutableStateFlow(1)
     val startDate = MutableStateFlow(Calendar.getInstance().startOfDay())
     private val timerFlow = flow {
         while (true) {

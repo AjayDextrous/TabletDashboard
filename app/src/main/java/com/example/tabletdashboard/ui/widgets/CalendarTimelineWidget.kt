@@ -265,7 +265,7 @@ fun TimelineView(events: Map<Calendar, List<CalendarEvent>>, daysToShow: Int, st
                         // Event Grid
                         Box(modifier = Modifier.fillMaxHeight()) {
                             (0..<23).forEach { hour ->
-                                HorizontalDivider(thickness = 1.dp, color = Color.LightGray, modifier = Modifier.offset { IntOffset(0, ((hour+1)  * itemHeight.intValue + 1).dp.roundToPx()) })
+                                HorizontalDivider(thickness = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), modifier = Modifier.offset { IntOffset(0, ((hour+1)  * itemHeight.intValue + 1).dp.roundToPx()) })
                             }
                             events[date]?.sortedByDescending { it.end.timeInMillis - it.start.timeInMillis }?.forEach { event ->
                                 val overlapStatus = checkOverlap(event, events[date] ?: emptyList())

@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -59,7 +60,7 @@ fun App(isDarkTheme: Boolean) {
     TabletDashboardTheme(darkTheme = isDarkTheme) {
         KeepScreenOn()
         HomeGridLayout(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(color = if (isDarkTheme) Color.White else Color.Black),
             items = items,
             rows = rows, cols = cols
         )
@@ -126,7 +127,12 @@ fun HomeGridLayout(
                             ButtonArrayWidget(
                                 topLeft = { modifier ->
                                     IconButton(modifier = modifier.background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp)), onClick = {appViewModel.isDarkMode.value = !appViewModel.isDarkMode.value}) {
-                                        Icon(if (appViewModel.isDarkMode.value) Icons.Outlined.WbSunny else Icons.Outlined.ModeNight, contentDescription = "toggle dark mode", modifier = Modifier.size(40.dp))
+                                        Icon(
+                                            if (appViewModel.isDarkMode.value) Icons.Outlined.WbSunny else Icons.Outlined.ModeNight,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            contentDescription = "toggle dark mode",
+                                            modifier = Modifier.size(40.dp)
+                                        )
                                     }
                                 },
                                 topRight =  { modifier -> Box(modifier = modifier.background(color = MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(8.dp))) },

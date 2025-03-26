@@ -190,7 +190,8 @@ fun DepartureItem(departure: Departure) {
             Text(
                 modifier = Modifier.weight(1f),
                 text = departure.servingLine.direction,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary
             )
             Text(
                 text = departure.countdown,
