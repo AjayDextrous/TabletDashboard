@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ModeNight
@@ -21,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -33,9 +34,11 @@ import com.example.tabletdashboard.ui.widgets.CalendarTimelineWidget
 import com.example.tabletdashboard.ui.widgets.ClockWidget
 import com.example.tabletdashboard.ui.widgets.MVGDeparturesWidget
 import com.example.tabletdashboard.ui.widgets.MensaMenuWidget
+import com.example.tabletdashboard.ui.widgets.ObsidianDailyWidgetWithPermissionCheck
 import com.example.tabletdashboard.ui.widgets.PictureWidget
 import com.example.tabletdashboard.ui.widgets.PomodoroTimerWidget
 import com.example.tabletdashboard.ui.widgets.RequestCalendarPermission
+import com.example.tabletdashboard.ui.widgets.ShoppingListWidget
 import com.example.tabletdashboard.ui.widgets.WeatherWidget
 import com.example.tabletdashboard.ui.widgets.Widget
 import com.example.tabletdashboard.viewmodels.AppViewModel
@@ -43,27 +46,61 @@ import com.example.tabletdashboard.viewmodels.AppViewModel
 @Composable
 fun App(isDarkTheme: Boolean) {
 
-    val rows = 4
-    val cols = 7
-    val items = listOf(
-        GridPosition(row = 0, column = 0, rowSpan = 1, colSpan = 2, widget = Widget.CLOCK),
-        GridPosition(row = 0, column = 2, rowSpan = 3, colSpan = 3, widget = Widget.CALENDAR_TIMELINE),
-        GridPosition(row = 0, column = 5, rowSpan = 1, colSpan = 2, widget = Widget.MVG_DEPARTURES),
-        GridPosition(row = 1, column = 5, rowSpan = 3, colSpan = 2, widget = Widget.MENSA_ARCISSTRASSE),
-        GridPosition(row = 1, column = 0, rowSpan = 2, colSpan = 2, widget = Widget.CALENDAR_MONTH),
-        GridPosition(row = 3, column = 0, rowSpan = 1, colSpan = 1, widget = Widget.POMODORO_TIMER),
-        GridPosition(row = 3, column = 1, rowSpan = 1, colSpan = 2, widget = Widget.WEATHER),
-        GridPosition(row = 3, column = 3, rowSpan = 1, colSpan = 1, widget = Widget.PICTURE_WIDGET),
-        GridPosition(row = 3, column = 4, rowSpan = 1, colSpan = 1, widget = Widget.BUTTON_ARRAY),
+    val page1 = DashboardPage(
+        rows = 4,
+        cols = 7,
+        items = listOf(
+            GridPosition(row = 0, column = 0, rowSpan = 1, colSpan = 1, widget = Widget.CLOCK),
+            GridPosition(row = 2, column = 5, rowSpan = 2, colSpan = 2, widget = Widget.CALENDAR_TIMELINE),
+            GridPosition(row = 3, column = 1, rowSpan = 1, colSpan = 2, widget = Widget.MVG_DEPARTURES),
+            GridPosition(row = 0, column = 5, rowSpan = 2, colSpan = 2, widget = Widget.MENSA_ARCISSTRASSE),
+            GridPosition(row = 1, column = 0, rowSpan = 2, colSpan = 2, widget = Widget.CALENDAR_MONTH),
+            GridPosition(row = 3, column = 0, rowSpan = 1, colSpan = 1, widget = Widget.POMODORO_TIMER),
+            GridPosition(row = 0, column = 2, rowSpan = 3, colSpan = 3, widget = Widget.OBSIDIAN_VIEW),
+            GridPosition(row = 0, column = 1, rowSpan = 1, colSpan = 1, widget = Widget.WEATHER),
+        )
     )
 
-    TabletDashboardTheme(darkTheme = isDarkTheme) {
-        KeepScreenOn()
-        HomeGridLayout(
-            modifier = Modifier.fillMaxSize().background(color = if (isDarkTheme) Color.White else Color.Black),
-            items = items,
-            rows = rows, cols = cols
+    val page2 = DashboardPage(
+        rows = 4,
+        cols = 7,
+        items = listOf(
+            GridPosition(row = 0, column = 0, rowSpan = 1, colSpan = 2, ),
+            GridPosition(row = 0, column = 2, rowSpan = 3, colSpan = 3, ),
+            GridPosition(row = 0, column = 5, rowSpan = 1, colSpan = 2, ),
+            GridPosition(row = 1, column = 5, rowSpan = 3, colSpan = 2, widget = Widget.SHOPPING_LIST),
+            GridPosition(row = 1, column = 0, rowSpan = 2, colSpan = 2, ),
+            GridPosition(row = 3, column = 0, rowSpan = 1, colSpan = 1, ),
+            GridPosition(row = 3, column = 1, rowSpan = 1, colSpan = 2, ),
+            GridPosition(row = 3, column = 3, rowSpan = 1, colSpan = 1, ),
+            GridPosition(row = 3, column = 4, rowSpan = 1, colSpan = 1, ),
         )
+    )
+
+    val pages = mutableListOf<DashboardPage>()
+
+    pages.add(page1)
+    pages.add(page2)
+
+    TabletDashboardTheme(darkTheme = isDarkTheme) {
+        val pagerState = rememberPagerState(pageCount = { pages.size }, initialPage = 0)
+
+        KeepScreenOn()
+        HorizontalPager(state = pagerState) { page ->
+            HomeGridLayout(
+                modifier = Modifier.fillMaxSize(),
+                items = pages[page].items,
+                rows = pages[page].rows, cols = pages[page].cols
+            )
+
+        }
+//        HomeGridLayout(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(color = if (isDarkTheme) Color.White else Color.Black),
+//            items = items,
+//            rows = rows, cols = cols
+//        )
     }
 }
 
@@ -141,6 +178,8 @@ fun HomeGridLayout(
                             )
                         }
                         Widget.PICTURE_WIDGET -> PictureWidget()
+                        Widget.SHOPPING_LIST -> ShoppingListWidget()
+                        Widget.OBSIDIAN_VIEW -> ObsidianDailyWidgetWithPermissionCheck()
                         else -> WidgetPlaceholder("${position.rowSpan} * ${position.colSpan}")
                     }
                 }
@@ -168,4 +207,10 @@ data class GridPosition(
     val rowSpan: Int = 1,
     val colSpan: Int = 1,
     val widget: Widget = Widget.PLACEHOLDER
+)
+
+data class DashboardPage(
+    val rows: Int,
+    val cols: Int,
+    val items: List<GridPosition>
 )

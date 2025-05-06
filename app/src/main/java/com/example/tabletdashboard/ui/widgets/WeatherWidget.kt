@@ -40,20 +40,43 @@ fun WeatherWidget() {
         val weatherStateValue = weather.value
         if (weatherStateValue is AsyncState.Success) {
             val weatherValue = weatherStateValue.data
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = getWeatherIcon(weatherValue.currentWeather.weatherCode),
-                    contentDescription = "Weather Icon",
-                    modifier = Modifier.size(72.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Spacer(Modifier.width(16.dp))
-                Text(
-                    text = "${weatherValue.currentWeather.temperature}${weatherValue.currentWeatherUnits.temperature}",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.displayMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val boxWithConstraintsScope = this
+                val isPortrait = boxWithConstraintsScope.maxWidth.value < 1.2*boxWithConstraintsScope.maxHeight.value
+                if(!isPortrait){
+                    Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                        Icon(
+                            imageVector = getWeatherIcon(weatherValue.currentWeather.weatherCode),
+                            contentDescription = "Weather Icon",
+                            modifier = Modifier.size(72.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Text(
+                            text = "${weatherValue.currentWeather.temperature}${weatherValue.currentWeatherUnits.temperature}",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.displayMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                } else {
+                    Column (modifier = Modifier.fillMaxSize(),horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Icon(
+                            imageVector = getWeatherIcon(weatherValue.currentWeather.weatherCode),
+                            contentDescription = "Weather Icon",
+                            modifier = Modifier.size(72.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = "${weatherValue.currentWeather.temperature}${weatherValue.currentWeatherUnits.temperature}",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.displayMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
             }
         } else {
             Column(

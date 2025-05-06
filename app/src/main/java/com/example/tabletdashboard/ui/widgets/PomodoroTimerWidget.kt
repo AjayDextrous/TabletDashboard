@@ -21,46 +21,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tabletdashboard.viewmodels.PomodoroTimerViewModel
+import org.koin.androidx.compose.koinViewModel
 import kotlin.math.ceil
 
 @Composable
 fun PomodoroTimerWidget() {
-    var selectedTime by remember { mutableLongStateOf(30 * 60 * 1000L) } // Default 30 minutes
-    var remainingTime by remember { mutableLongStateOf(selectedTime) }
-    var isRunning by remember { mutableStateOf(false) }
+    val viewModel: PomodoroTimerViewModel = koinViewModel()
+    val remainingTime by viewModel.remainingTime.collectAsState()
+    val selectedTime by viewModel.selectedTime.collectAsState()
+    val isRunning by viewModel.isRunning.collectAsState()
+
     var showDialog by remember { mutableStateOf(false) }
-    var timer: CountDownTimer? by remember { mutableStateOf(null) }
-    val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_ALARM, 100) }
-
-    fun startTimer() {
-        timer?.cancel()
-        timer = object : CountDownTimer(remainingTime, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                remainingTime = millisUntilFinished
-            }
-
-            override fun onFinish() {
-                isRunning = false
-                toneGenerator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 500) // Beep sound
-                timer?.cancel()
-                remainingTime = selectedTime
-            }
-        }.start()
-        isRunning = true
-    }
-
-    fun stopTimer() {
-        timer?.cancel()
-        isRunning = false
-    }
-
-    fun resetTimer(newTime: Long) {
-        timer?.cancel()
-        selectedTime = newTime
-        remainingTime = newTime
-        isRunning = false
-    }
-
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -70,10 +42,10 @@ fun PomodoroTimerWidget() {
             .indication(interactionSource, LocalIndication.current)
             .combinedClickable(
                 onClick = {
-                    if (isRunning) stopTimer() else startTimer()
+                    if (isRunning) viewModel.stopTimer() else viewModel.startTimer()
                 },
                 onLongClick = { showDialog = true },
-                onDoubleClick = { resetTimer(selectedTime) }
+                onDoubleClick = { viewModel.resetTimer() }
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -98,42 +70,29 @@ fun PomodoroTimerWidget() {
             title = { Text("Select Timer Duration") },
             text = {
                 Row {
-                    Column(Modifier.weight(1f).padding(8.dp)) {
-                        listOf(1, 5, 15, 45, 90).forEach { minutes ->
-                            Text(
-                                "$minutes",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        resetTimer(minutes * 60 * 1000L)
-                                        showDialog = false
-                                    }
-                                    .padding(0.dp, 8.dp)
-                                    .border(width = 1.dp, color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp))
-                                    .padding(8.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                    Column(Modifier.weight(1f).padding(8.dp)) {
-                        listOf(10, 30, 60, 120).forEach { minutes ->
-                            Text(
-                                "$minutes",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        resetTimer(minutes * 60 * 1000L)
-                                        showDialog = false
-                                    }
-                                    .padding(0.dp, 8.dp)
-                                    .border(width = 1.dp, color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(8.dp))
-                                    .padding(8.dp),
-                                textAlign = TextAlign.Center
-                            )
+                    listOf(
+                        listOf(1, 5, 15, 45, 90),
+                        listOf(10, 30, 60, 120)
+                    ).forEach { group ->
+                        Column(Modifier.weight(1f).padding(8.dp)) {
+                            group.forEach { minutes ->
+                                Text(
+                                    "$minutes",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.resetTimer(minutes * 60 * 1000L)
+                                            showDialog = false
+                                        }
+                                        .padding(0.dp, 8.dp)
+                                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                                        .padding(8.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
-
             },
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) {
@@ -149,3 +108,4 @@ private fun Double.toFormattedTime(): String {
     val seconds = (this % 60).toInt()
     return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
 }
+

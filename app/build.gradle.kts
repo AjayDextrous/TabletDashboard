@@ -78,5 +78,9 @@ dependencies {
     implementation(libs.coil3.compose)
     implementation(libs.coil3.network)
 
+    // Markdown Parsing
+    implementation(libs.markwon)
+    implementation(libs.markwon.tasklist)
+
     implementation(libs.material.icons)
 }

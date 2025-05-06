@@ -11,6 +11,8 @@ enum class Widget {
     MVG_DEPARTURES,
     BUTTON_ARRAY,
     PICTURE_WIDGET,
+    OBSIDIAN_VIEW,
+    SHOPPING_LIST,
 }
 
 
